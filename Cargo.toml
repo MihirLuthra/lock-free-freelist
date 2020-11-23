@@ -1,0 +1,10 @@
+[package]
+name = "lock-free-freelist"
+version = "0.1.0"
+authors = ["Mihir Luthra <luthramihir708@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bit_fiddler = "2.1.1"
