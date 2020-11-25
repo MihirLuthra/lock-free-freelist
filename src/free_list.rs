@@ -1,7 +1,7 @@
 use super::{
     dump::Dump,
     fbox::FBox,
-    smart_pointer::{InitializableSmartPointer, SmartPointer},
+    smart_pointer::SmartPointer,
 };
 
 use std::mem::ManuallyDrop;
@@ -31,24 +31,5 @@ impl<T: SmartPointer> FreeList<T> {
             smart_pointer: unsafe { ManuallyDrop::new(T::from_raw(ptr)) },
             free_list: self,
         })
-    }
-}
-
-impl<T: InitializableSmartPointer> FreeList<T> {
-    pub fn recycle_or_alloc<'a>(
-        &'a self,
-        alloc_contents: <T as SmartPointer>::Content,
-    ) -> FBox<'a, T>
-    where
-        T: InitializableSmartPointer,
-    {
-        if let Ok(fbox) = self.recycle() {
-            fbox
-        } else {
-            FBox {
-                smart_pointer: ManuallyDrop::new(T::new(alloc_contents)),
-                free_list: self,
-            }
-        }
     }
 }

@@ -1,4 +1,4 @@
-use super::smart_pointer::{InitializableSmartPointer, SmartPointer};
+use super::smart_pointer::SmartPointer;
 
 impl<T> SmartPointer for Box<T> {
     type Content = T;
@@ -9,11 +9,5 @@ impl<T> SmartPointer for Box<T> {
 
     fn into_raw(smart_pointer: Self) -> *mut Self::Content {
         Box::into_raw(smart_pointer)
-    }
-}
-
-impl<T> InitializableSmartPointer for Box<T> {
-    fn new(data: <Self as SmartPointer>::Content) -> Self {
-        Box::new(data)
     }
 }
