@@ -1,4 +1,4 @@
-use super::smart_pointer::{SmartPointer, InitializableSmartPointer};
+use super::smart_pointer::{InitializableSmartPointer, SmartPointer};
 
 impl<T> SmartPointer for Box<T> {
     type Content = T;

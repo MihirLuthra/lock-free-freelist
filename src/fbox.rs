@@ -1,7 +1,4 @@
-use super::{
-    free_list::FreeList,
-    smart_pointer::SmartPointer,
-};
+use super::{free_list::FreeList, smart_pointer::SmartPointer};
 use std::mem::ManuallyDrop;
 
 pub struct FBox<'a, T: SmartPointer> {
@@ -11,9 +8,7 @@ pub struct FBox<'a, T: SmartPointer> {
 
 impl<'a, T: SmartPointer> Drop for FBox<'a, T> {
     fn drop(&mut self) {
-        let smart_pointer = unsafe {
-            ManuallyDrop::take(&mut self.smart_pointer)
-        };
+        let smart_pointer = unsafe { ManuallyDrop::take(&mut self.smart_pointer) };
 
         let garbage = T::into_raw(smart_pointer);
 

@@ -1,4 +1,4 @@
-mod smart_pointer;
 mod r#box;
+mod smart_pointer;
 
-pub use smart_pointer::{SmartPointer, InitializableSmartPointer};
+pub use smart_pointer::{InitializableSmartPointer, SmartPointer};

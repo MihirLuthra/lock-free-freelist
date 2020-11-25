@@ -49,7 +49,7 @@ impl<T> Dump<T> {
     /// 1) It checks `writer_bitmap` for unset bits (0 bits).
     /// 2) When it finds one, it atomically sets it.
     /// 3) We use this bit position as the index in `dump[]` to store the value.
-    /// 4) Setting the bit in `writer_bitmap` ensures that no 
+    /// 4) Setting the bit in `writer_bitmap` ensures that no
     ///    other thread will write at that index.
     /// 5) After storing `raw` in the `dump[]`, we tell reader threads
     ///    that this index is available for read. To do this, we set this
@@ -181,10 +181,11 @@ impl<T> Dump<T> {
     /// This executes closure `f` for every value in the dump
     /// and then clears the dump.
     pub fn for_each<F>(&mut self, f: F)
-        where F: Fn(*mut T) -> ()
+    where
+        F: Fn(*mut T) -> (),
     {
-        let mut reader_bitmap = self.reader_bitmap.load(Ordering::Relaxed); 
-        
+        let mut reader_bitmap = self.reader_bitmap.load(Ordering::Relaxed);
+
         self.reader_bitmap.store(0, Ordering::Relaxed);
         self.writer_bitmap.store(0, Ordering::Relaxed);
 
@@ -195,7 +196,7 @@ impl<T> Dump<T> {
             if first_set_spot as usize == max_bits!(type = usize) {
                 break;
             }
-            
+
             unset!(in reader_bitmap, usize, first_set_spot);
 
             let dump_ptr = self.dump.get();
