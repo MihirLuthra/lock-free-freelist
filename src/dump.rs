@@ -40,9 +40,8 @@ impl<T> Dump<T> {
     }
 
     /// Adds a new element to the dump. On success it returns
-    /// () and on failure DumpError<T>.
-    /// Failure is possible if `dump[]` array is full and in such case it
-    /// returns `DumpError::DumpFull`.
+    /// () and on failure returns back the ptr indicating
+    /// that it couldn't be stored.
     ///
     /// To synchronize this addition to the dump[] array, the following
     /// procedure is followed:
@@ -55,7 +54,7 @@ impl<T> Dump<T> {
     /// 5) After storing `raw` in the `dump[]`, we tell reader threads
     ///    that this index is available for read. To do this, we set this
     ///    same bit position in `reader_bitmap` atomically.
-    pub fn throw(&self, raw: *mut T) -> Result<(), DumpError<T>> {
+    pub fn throw(&self, raw: *mut T) -> Result<(), *mut T> {
         let mut old_writer_bitmap = self.writer_bitmap.load(Ordering::Relaxed);
         let mut first_empty_spot;
 
@@ -65,7 +64,7 @@ impl<T> Dump<T> {
 
             // occupy `first_empty_spot` in `old_writer_bitmap` and assign it to `new_writer_bitmap`
             let new_writer_bitmap = if first_empty_spot as usize == max_bits!(type = usize) {
-                return Err(DumpError::DumpFull(raw));
+                return Err(raw);
             } else {
                 set!(old_writer_bitmap, usize, first_empty_spot)
             };
@@ -113,10 +112,8 @@ impl<T> Dump<T> {
     }
 
     /// Gets a value from the dump. On success it returns
-    /// the value `*mut T` and on failure DumpError<T>.
-    ///
-    /// Failure is possible if `dump[]` is empty, and in such case
-    /// it returns `DumpError::DumpEmpty`.
+    /// the value `*mut T` and on failure (). Failure indicates
+    /// that dump is empty.
     ///
     /// To synchronize the retreival from the dump[] array, the following
     /// procedure is followed:
@@ -128,7 +125,7 @@ impl<T> Dump<T> {
     /// 3) Then to allow writers to use this position for new writes,
     ///    we unset this bit from `writer_bitmap`.
     /// 4) Finally, we return `dump[bit_posn]`.
-    pub fn recycle(&self, raw: *mut T) -> Result<*mut T, DumpError<T>> {
+    pub fn recycle(&self) -> Result<*mut T, ()> {
         let mut old_reader_bitmap = self.reader_bitmap.load(Ordering::Relaxed);
         let mut first_set_spot;
 
@@ -138,7 +135,7 @@ impl<T> Dump<T> {
 
             // occupy `first_set_spot` in `old_reader_bitmap` and assign it to `new_reader_bitmap`
             let new_reader_bitmap = if first_set_spot as usize == max_bits!(type = usize) {
-                return Err(DumpError::<T>::DumpEmpty);
+                return Err(());
             } else {
                 unset!(old_reader_bitmap, usize, first_set_spot)
             };
@@ -175,24 +172,5 @@ impl<T> Dump<T> {
         }
 
         Ok(retval)
-    }
-}
-
-#[derive(Debug)]
-pub enum DumpError<T> {
-    DumpFull(*mut T),
-    DumpEmpty,
-}
-
-use std::fmt;
-
-impl<T> fmt::Display for DumpError<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            DumpError::DumpFull(ref ptr) => {
-                write!(f, "Dump is full, {:?} could not be stored", ptr)
-            }
-            DumpError::DumpEmpty => write!(f, "Dump is empty"),
-        }
     }
 }
