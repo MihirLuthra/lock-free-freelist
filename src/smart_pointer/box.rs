@@ -10,4 +10,8 @@ impl<T> SmartPointer for Box<T> {
     fn into_raw(smart_pointer: Self) -> *mut Self::Content {
         Box::into_raw(smart_pointer)
     }
+
+    fn new(data: Self::Content) -> Self {
+        Box::new(data)
+    }
 }
