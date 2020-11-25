@@ -1,25 +1,24 @@
-use super::{
-    fbox::FBox,
-    dump::Dump,
-    smart_pointer::SmartPointer,
-};
+use super::{dump::Dump, fbox::FBox, smart_pointer::SmartPointer};
 
-use std::marker::PhantomData;
+use std::mem::ManuallyDrop;
 
-pub struct FreeList<'a, T: SmartPointer> {
+pub struct FreeList<T: SmartPointer> {
     pub(crate) dump: Dump<T::Content>,
-    _marker: PhantomData<&'a T>,
 }
 
-impl<'a, T: SmartPointer> FreeList<'a, T> {
+impl<T: SmartPointer> FreeList<T> {
     pub fn new() -> Self {
-        FreeList { 
-            dump: Dump::new(),
-            _marker: PhantomData,
-        }
+        FreeList { dump: Dump::new() }
     }
 
-    pub fn alloc() -> FBox<'a, T> {
-       todo!() 
+    pub fn recycle<'a>(&'a self) -> Result<FBox<'a, T>, ()> {
+        if let Ok(ptr) = self.dump.recycle() {
+            return Ok(FBox {
+                smart_pointer: unsafe { ManuallyDrop::new(T::from_raw(ptr)) },
+                free_list: self,
+            });
+        }
+
+        Err(())
     }
 }
