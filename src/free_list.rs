@@ -1,4 +1,8 @@
-use super::{dump::Dump, fbox::FBox, smart_pointer::SmartPointer};
+use super::{
+    dump::Dump,
+    fbox::FBox,
+    smart_pointer::{InitializableSmartPointer, SmartPointer},
+};
 
 use std::mem::ManuallyDrop;
 
@@ -12,13 +16,30 @@ impl<T: SmartPointer> FreeList<T> {
     }
 
     pub fn recycle<'a>(&'a self) -> Result<FBox<'a, T>, ()> {
-        if let Ok(ptr) = self.dump.recycle() {
-            return Ok(FBox {
-                smart_pointer: unsafe { ManuallyDrop::new(T::from_raw(ptr)) },
-                free_list: self,
-            });
-        }
+        let ptr = self.dump.recycle()?;
 
-        Err(())
+        Ok(FBox {
+            smart_pointer: unsafe { ManuallyDrop::new(T::from_raw(ptr)) },
+            free_list: self,
+        })
+    }
+}
+
+impl<T: InitializableSmartPointer> FreeList<T> {
+    pub fn recycle_or_alloc<'a>(
+        &'a self,
+        alloc_contents: <T as SmartPointer>::Content,
+    ) -> FBox<'a, T>
+    where
+        T: InitializableSmartPointer,
+    {
+        if let Ok(fbox) = self.recycle() {
+            fbox
+        } else {
+            FBox {
+                smart_pointer: ManuallyDrop::new(T::new(alloc_contents)),
+                free_list: self,
+            }
+        }
     }
 }
