@@ -7,7 +7,7 @@ use super::{
 use std::marker::PhantomData;
 
 pub struct FreeList<'a, T: SmartPointer> {
-    dump: Dump<T>,
+    pub(crate) dump: Dump<T::Content>,
     _marker: PhantomData<&'a T>,
 }
 
