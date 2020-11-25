@@ -173,4 +173,35 @@ impl<T> Dump<T> {
 
         Ok(retval)
     }
+
+    /// This function is not thread safe and hence it takes
+    /// a mutable reference to check at compile time that
+    /// no other methods that take reference to dump are called.
+    ///
+    /// This executes closure `f` for every value in the dump
+    /// and then clears the dump.
+    pub fn for_each<F>(&mut self, f: F)
+        where F: Fn(*mut T) -> ()
+    {
+        let mut reader_bitmap = self.reader_bitmap.load(Ordering::Relaxed); 
+        
+        self.reader_bitmap.store(0, Ordering::Relaxed);
+        self.writer_bitmap.store(0, Ordering::Relaxed);
+
+        loop {
+            // Fast if set bits are sparse which should generally be the case.
+            let first_set_spot = reader_bitmap.trailing_zeros();
+
+            if first_set_spot as usize == max_bits!(type = usize) {
+                break;
+            }
+            
+            unset!(in reader_bitmap, usize, first_set_spot);
+
+            let dump_ptr = self.dump.get();
+            let val_at_index = unsafe { (*dump_ptr)[first_set_spot as usize] };
+
+            f(val_at_index);
+        }
+    }
 }
