@@ -1,12 +1,18 @@
 use super::{free_list::FreeList, smart_pointer::SmartPointer};
 use std::{mem::ManuallyDrop, ops::Deref};
 
-pub struct FBox<'a, T: SmartPointer> {
+pub struct FBox<'a, T: SmartPointer>
+where
+    <T as Deref>::Target: Sized,
+{
     pub(crate) smart_pointer: ManuallyDrop<T>,
     pub(crate) free_list: &'a FreeList<T>,
 }
 
-impl<'a, T: SmartPointer> Deref for FBox<'a, T> {
+impl<'a, T: SmartPointer> Deref for FBox<'a, T>
+where
+    <T as Deref>::Target: Sized,
+{
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -14,7 +20,10 @@ impl<'a, T: SmartPointer> Deref for FBox<'a, T> {
     }
 }
 
-impl<'a, T: SmartPointer> Drop for FBox<'a, T> {
+impl<'a, T: SmartPointer> Drop for FBox<'a, T>
+where
+    <T as Deref>::Target: Sized,
+{
     fn drop(&mut self) {
         let smart_pointer = unsafe { ManuallyDrop::take(&mut self.smart_pointer) };
 

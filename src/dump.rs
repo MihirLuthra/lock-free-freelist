@@ -16,8 +16,8 @@ pub struct Dump<T> {
     dump: UnsafeCell<[*mut T; max_bits!(type = usize)]>,
 }
 
-unsafe impl<T: Send> Send for Dump<T> {}
-unsafe impl<T: Sync> Sync for Dump<T> {}
+unsafe impl<T> Send for Dump<T> {}
+unsafe impl<T> Sync for Dump<T> {}
 
 impl<T> Dump<T> {
     /// Returns a new Dump instance.
