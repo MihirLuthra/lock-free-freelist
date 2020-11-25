@@ -5,8 +5,8 @@ use super::{
 use std::mem::ManuallyDrop;
 
 pub struct FBox<'a, T: SmartPointer> {
-    smart_pointer: ManuallyDrop<T>,
-    free_list: &'a FreeList<'a, T>,
+    pub(crate) smart_pointer: ManuallyDrop<T>,
+    pub(crate) free_list: &'a FreeList<T>,
 }
 
 impl<'a, T: SmartPointer> Drop for FBox<'a, T> {
