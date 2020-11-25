@@ -1,9 +1,17 @@
 use super::{free_list::FreeList, smart_pointer::SmartPointer};
-use std::mem::ManuallyDrop;
+use std::{mem::ManuallyDrop, ops::Deref};
 
 pub struct FBox<'a, T: SmartPointer> {
     pub(crate) smart_pointer: ManuallyDrop<T>,
     pub(crate) free_list: &'a FreeList<T>,
+}
+
+impl<'a, T: SmartPointer> Deref for FBox<'a, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.smart_pointer
+    }
 }
 
 impl<'a, T: SmartPointer> Drop for FBox<'a, T> {
