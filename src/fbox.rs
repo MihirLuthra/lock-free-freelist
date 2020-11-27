@@ -1,5 +1,5 @@
 use super::{free_list::FreeList, smart_pointer::SmartPointer};
-use std::{mem::ManuallyDrop, ops::Deref};
+use std::{mem::ManuallyDrop, ops::{Deref, DerefMut}};
 
 pub struct FBox<'a, T: SmartPointer>
 where
@@ -29,6 +29,15 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.smart_pointer
+    }
+}
+
+impl<'a, T: SmartPointer> DerefMut for FBox<'a, T>
+where
+    <T as Deref>::Target: Sized,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.smart_pointer
     }
 }
 
