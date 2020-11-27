@@ -5,8 +5,20 @@ pub struct FBox<'a, T: SmartPointer>
 where
     <T as Deref>::Target: Sized,
 {
-    pub(crate) smart_pointer: ManuallyDrop<T>,
-    pub(crate) free_list: &'a FreeList<T>,
+    smart_pointer: ManuallyDrop<T>,
+    free_list: &'a FreeList<T>,
+}
+
+impl<'a, T: SmartPointer> FBox<'a, T>
+where
+    <T as Deref>::Target: Sized,
+{
+    pub fn new<'b>(smart_pointer: T, free_list: &'b FreeList<T>) -> FBox<'b, T> {
+        FBox {
+            smart_pointer: ManuallyDrop::new(smart_pointer),
+            free_list: free_list,
+        }
+    }
 }
 
 impl<'a, T: SmartPointer> Deref for FBox<'a, T>

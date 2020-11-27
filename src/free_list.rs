@@ -1,5 +1,5 @@
 use super::{dump::Dump, fbox::FBox, smart_pointer::SmartPointer};
-use std::{mem::ManuallyDrop, ops::Deref};
+use std::ops::Deref;
 
 pub struct FreeList<T: SmartPointer>
 where
@@ -31,16 +31,13 @@ where
     pub fn recycle<'a>(&'a self) -> Result<FBox<'a, T>, ()> {
         let ptr = self.dump.recycle()?;
 
-        Ok(FBox {
-            smart_pointer: unsafe { ManuallyDrop::new(T::from_raw(ptr)) },
-            free_list: self,
-        })
+        Ok(FBox::new(
+            unsafe { T::from_raw(ptr) },
+            self,
+        ))
     }
 
     pub fn alloc<'a>(&'a self, smart_pointer: T) -> FBox<'a, T> {
-        FBox {
-            smart_pointer: ManuallyDrop::new(smart_pointer),
-            free_list: self,
-        }
+        FBox::new(smart_pointer, self)
     }
 }
