@@ -174,13 +174,11 @@ impl<T> Dump<T> {
         Ok(retval)
     }
 
-    /// This function is not thread safe and hence it takes
-    /// a mutable reference to check at compile time that
-    /// no other methods that take reference to dump are called.
+    /// This function is not thread safe.
     ///
     /// This executes closure `f` for every value in the dump
     /// and then clears the dump.
-    pub fn for_each<F>(&mut self, f: F)
+    pub unsafe fn for_each<F>(&self, f: F)
     where
         F: Fn(*mut T) -> (),
     {
@@ -200,7 +198,7 @@ impl<T> Dump<T> {
             unset!(in reader_bitmap, usize, first_set_spot);
 
             let dump_ptr = self.dump.get();
-            let val_at_index = unsafe { (*dump_ptr)[first_set_spot as usize] };
+            let val_at_index = (*dump_ptr)[first_set_spot as usize];
 
             f(val_at_index);
         }
