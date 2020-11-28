@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 /// Types implementing this trait can be wrapped inside
 /// [FreeList](crate::FreeList).
@@ -11,7 +11,7 @@ use std::ops::Deref;
 /// becuase the pointer could still be out there after being dropped.
 ///
 /// For this reason the trait is unsafe.
-pub unsafe trait SmartPointer: Deref
+pub unsafe trait SmartPointer: Deref + DerefMut
 where
     <Self as Deref>::Target: Sized,
 {
