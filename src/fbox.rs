@@ -1,7 +1,7 @@
 use super::{free_list::FreeList, smart_pointer::SmartPointer};
 use std::{mem::ManuallyDrop, ops::{Deref, DerefMut}};
 
-pub struct FBox<'a, T: SmartPointer>
+pub struct Reuse<'a, T: SmartPointer>
 where
     <T as Deref>::Target: Sized,
 {
@@ -9,19 +9,19 @@ where
     free_list: &'a FreeList<T>,
 }
 
-impl<'a, T: SmartPointer> FBox<'a, T>
+impl<'a, T: SmartPointer> Reuse<'a, T>
 where
     <T as Deref>::Target: Sized,
 {
-    pub fn new<'b>(smart_pointer: T, free_list: &'b FreeList<T>) -> FBox<'b, T> {
-        FBox {
+    pub fn new<'b>(smart_pointer: T, free_list: &'b FreeList<T>) -> Reuse<'b, T> {
+        Reuse {
             smart_pointer: ManuallyDrop::new(smart_pointer),
             free_list: free_list,
         }
     }
 }
 
-impl<'a, T: SmartPointer> Deref for FBox<'a, T>
+impl<'a, T: SmartPointer> Deref for Reuse<'a, T>
 where
     <T as Deref>::Target: Sized,
 {
@@ -32,7 +32,7 @@ where
     }
 }
 
-impl<'a, T: SmartPointer> DerefMut for FBox<'a, T>
+impl<'a, T: SmartPointer> DerefMut for Reuse<'a, T>
 where
     <T as Deref>::Target: Sized,
 {
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<'a, T: SmartPointer> Drop for FBox<'a, T>
+impl<'a, T: SmartPointer> Drop for Reuse<'a, T>
 where
     <T as Deref>::Target: Sized,
 {

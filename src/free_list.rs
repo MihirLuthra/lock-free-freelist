@@ -1,4 +1,4 @@
-use super::{dump::Dump, fbox::FBox, smart_pointer::SmartPointer};
+use super::{dump::Dump, fbox::Reuse, smart_pointer::SmartPointer};
 use std::ops::Deref;
 
 pub struct FreeList<T: SmartPointer>
@@ -38,7 +38,7 @@ where
         FreeList { dump: Dump::new() }
     }
 
-    /// Returns a FBox on success.
+    /// Returns a Reuse on success.
     /// On failure, it returns () indicating that free list
     /// is empty.
     ///
@@ -46,7 +46,7 @@ where
     ///
     /// # Example
     /// ```
-    /// use lock_free_freelist::{FreeList, FBox};
+    /// use lock_free_freelist::{FreeList, Reuse};
     ///
     /// #[derive(Debug, PartialEq, Eq)]
     /// struct MyType {
@@ -62,7 +62,7 @@ where
     ///     {
     ///         // We drop a value so free list contains something.
     ///         let my_type = Box::new( MyType {x: 5} );
-    ///         let _to_drop = FBox::new(my_type, &free_list);
+    ///         let _to_drop = Reuse::new(my_type, &free_list);
     ///     }
     ///
     ///     let mut my_type = free_list.recycle().unwrap();
@@ -73,17 +73,17 @@ where
     ///     assert_eq!(**my_type, MyType {x: 9});
     /// }
     /// ```
-    pub fn recycle<'a>(&'a self) -> Result<FBox<'a, T>, ()> {
+    pub fn recycle<'a>(&'a self) -> Result<Reuse<'a, T>, ()> {
         let ptr = self.dump.recycle()?;
 
-        Ok(FBox::new(
+        Ok(Reuse::new(
             unsafe { T::from_raw(ptr) },
             self,
         ))
     }
 
-    pub fn alloc<'a>(&'a self, smart_pointer: T) -> FBox<'a, T> {
-        FBox::new(smart_pointer, self)
+    pub fn alloc<'a>(&'a self, smart_pointer: T) -> Reuse<'a, T> {
+        Reuse::new(smart_pointer, self)
     }
 
     /// Calls drop for all the pointers in free list

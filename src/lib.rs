@@ -9,6 +9,6 @@ mod fbox;
 mod free_list;
 mod smart_pointer;
 
-pub use fbox::FBox;
+pub use fbox::Reuse;
 pub use free_list::FreeList;
 pub use smart_pointer::SmartPointer;
