@@ -1,6 +1,33 @@
 use super::{dump::Dump, reuse::Reuse, smart_pointer::SmartPointer};
 use std::ops::Deref;
 
+/// A dump for throwing and reusing heap
+/// allocated memory. Maximum entries it 
+/// can store is equal to the number of bits in usize.
+///
+/// # Example
+///
+/// ```
+/// use lock_free_freelist::FreeList;
+///
+/// struct MyType {
+///     x: i32,
+/// }
+///
+/// // A free list to store heap allocated pointers to i32
+/// let free_list = FreeList::<Box<MyType>>::new();
+///
+/// let x = if let Ok(mut recycled) = free_list.recycle() {
+///     recycled.x = 5;
+///     recycled
+/// } else {
+///     // Free list is empty, have to allocate
+///     let new_x = MyType { x: 5 };
+///     let boxed = Box::new(new_x);
+///     free_list.alloc(boxed) // when this drops, it's pointer will be
+///                            // dumped to free list
+/// };
+/// ```
 pub struct FreeList<T: SmartPointer>
 where
     <T as Deref>::Target: Sized,
@@ -38,7 +65,7 @@ where
         FreeList { dump: Dump::new() }
     }
 
-    /// Returns a Reuse on success.
+    /// Returns a [Reuse](crate::Reuse) on success.
     /// On failure, it returns () indicating that free list
     /// is empty.
     ///
@@ -82,14 +109,35 @@ where
         ))
     }
 
+    /// Calls [Reuse::new](crate::Reuse::new) with this free list.
+    ///
+    /// # Example
+    /// ```
+    /// use lock_free_freelist::FreeList;
+    ///
+    /// let free_list = FreeList::<Box<i32>>::new();
+    ///
+    /// let x = free_list.alloc(Box::new(5));
+    /// ```
     pub fn alloc<'a>(&'a self, smart_pointer: T) -> Reuse<'a, T> {
         Reuse::new(smart_pointer, self)
     }
 
     /// Calls drop for all the pointers in free list
-    /// and clear the free list.
+    /// and clears the free list.
     ///
     /// This is not thread safe.
+    ///
+    /// # Example
+    /// ```
+    /// use lock_free_freelist::FreeList;
+    ///
+    /// let free_list = FreeList::<Box<i32>>::new();
+    ///
+    /// unsafe{
+    ///     free_list.clear();
+    /// }
+    /// ```
     pub unsafe fn clear(&self) {
         // drop all the pointers that are still on free list
         self.dump.for_each(|ptr| {
