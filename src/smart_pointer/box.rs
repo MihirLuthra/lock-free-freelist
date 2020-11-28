@@ -1,7 +1,7 @@
 use super::smart_pointer::SmartPointer;
 use std::ops::Deref;
 
-impl<T> SmartPointer for Box<T>
+unsafe impl<T> SmartPointer for Box<T>
 where
     <Self as Deref>::Target: Sized,
 {
