@@ -1,12 +1,18 @@
-use super::{free_list::FreeList, smart_pointer::SmartPointer};
+use super::{
+    free_list::FreeList,
+    smart_pointer::SmartPointer,
+    reusable::Reusable,
+};
 use std::{mem::ManuallyDrop, ops::{Deref, DerefMut}};
 
 /// This is a wrapper around smart pointers so that
 /// when they are dropped, raw pointers contained in them can
 /// be put to free list and reused.
 ///
-/// This can be produced by [FreeList::alloc](crate::FreeList::alloc)
-/// or [FreeList::recycle](crate::FreeList::recycle).
+/// This is produced by a [FreeList](crate::FreeList).
+/// It is a smart pointer that contains shared ref to FreeList
+/// and when it's contents drop, the contained pointer of those contents
+/// is dropped into free list for later use.
 ///
 /// It implements Deref and DerefMut to access the wrapped smart pointer.
 ///
@@ -17,16 +23,17 @@ use std::{mem::ManuallyDrop, ops::{Deref, DerefMut}};
 ///
 /// let free_list = FreeList::<Box<i32>>::new();
 ///
-/// let reusable_box: Reuse<Box<i32>> = free_list.alloc(Box::new(5));
+/// let reusable_box: Reuse<Box<i32>> = free_list.alloc(5);
 ///
-/// drop(reusable_box); // So that it can be recycled
+/// drop(reusable_box); // So that it can be reused
 ///
-/// let mut new_reusable_box: Reuse<Box<i32>> = free_list.recycle().unwrap();
-/// **new_reusable_box = 5;
+/// let mut new_reusable_box: Reuse<Box<i32>> = free_list.reuse(9).unwrap();
+///
+/// assert_eq!(**new_reusable_box, 9);
 /// ```
 pub struct Reuse<'a, T: SmartPointer>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     smart_pointer: ManuallyDrop<T>,
     free_list: &'a FreeList<T>,
@@ -34,7 +41,7 @@ where
 
 impl<'a, T: SmartPointer> Reuse<'a, T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     /// Get a new [Reuse](crate::Reuse) instance.
     pub fn new<'b>(smart_pointer: T, free_list: &'b FreeList<T>) -> Reuse<'b, T> {
@@ -47,7 +54,7 @@ where
 
 impl<'a, T: SmartPointer> Deref for Reuse<'a, T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     type Target = T;
 
@@ -58,7 +65,7 @@ where
 
 impl<'a, T: SmartPointer> DerefMut for Reuse<'a, T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.smart_pointer
@@ -70,7 +77,7 @@ where
 /// and if free list is full, the contents are dropped.
 impl<'a, T: SmartPointer> Drop for Reuse<'a, T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     fn drop(&mut self) {
         let smart_pointer = unsafe { ManuallyDrop::take(&mut self.smart_pointer) };

@@ -1,4 +1,9 @@
-use super::{dump::Dump, reuse::Reuse, smart_pointer::SmartPointer};
+use super::{
+    dump::Dump,
+    reuse::Reuse,
+    smart_pointer::SmartPointer,
+    reusable::Reusable,
+};
 use std::ops::Deref;
 
 /// A dump for throwing and reusing heap
@@ -8,29 +13,23 @@ use std::ops::Deref;
 /// # Example
 ///
 /// ```
-/// use lock_free_freelist::FreeList;
+/// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
 ///
 /// struct MyType {
 ///     x: i32,
 /// }
+/// impl_reusable!(MyType);
 ///
 /// // A free list to store heap allocated pointers to i32
 /// let free_list = FreeList::<Box<MyType>>::new();
 ///
-/// let x = if let Ok(mut recycled) = free_list.recycle() {
-///     recycled.x = 5;
-///     recycled
-/// } else {
-///     // Free list is empty, have to allocate
-///     let new_x = MyType { x: 5 };
-///     let boxed = Box::new(new_x);
-///     free_list.alloc(boxed) // when this drops, it's pointer will be
-///                            // dumped to free list
-/// };
+/// // If free list contains free pointers, it will
+/// // reuse that, otherwise will allocate new memory
+/// let x = free_list.reuse_or_alloc(MyType { x: 5 });
 /// ```
 pub struct FreeList<T: SmartPointer>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     pub(crate) dump: Dump<<T as Deref>::Target>,
 }
@@ -38,7 +37,7 @@ where
 /// Calls self.clear()
 impl<T: SmartPointer> Drop for FreeList<T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     fn drop(&mut self) {
         unsafe {
@@ -49,15 +48,16 @@ where
 
 impl<T: SmartPointer> FreeList<T>
 where
-    <T as Deref>::Target: Sized,
+    <T as Deref>::Target: Sized + Reusable,
 {
     /// Initialize an empty free list.
     ///
     /// # Example
     /// ```
-    /// use lock_free_freelist::FreeList;
+    /// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
     ///
     /// struct MyType;
+    /// impl_reusable!(MyType);
     /// 
     /// let free_list = FreeList::<Box<MyType>>::new();
     /// ```
@@ -66,47 +66,54 @@ where
     }
 
     /// Returns a [Reuse](crate::Reuse) on success.
-    /// On failure, it returns () indicating that free list
+    /// On failure, it returns the contents back indicating that free list
     /// is empty.
-    ///
-    /// You have to setup the contents of the recycled value by yourself.
     ///
     /// # Example
     /// ```
-    /// use lock_free_freelist::{FreeList, Reuse};
+    /// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
     ///
     /// #[derive(Debug, PartialEq, Eq)]
     /// struct MyType {
     ///     x: i32,
     /// }
+    /// impl_reusable!(MyType);
     ///
     /// fn main() {
     ///     let free_list = FreeList::<Box<MyType>>::new();
     ///
     ///     // free list is empty, should return Err(())
-    ///     assert!(free_list.recycle().is_err());
+    ///     assert!(free_list.reuse(MyType {x: 3}).is_err());
     ///
     ///     {
     ///         // We drop a value so free list contains something.
-    ///         let my_type = Box::new( MyType {x: 5} );
-    ///         let _to_drop = Reuse::new(my_type, &free_list);
+    ///         let _to_drop = free_list.alloc(MyType {x: 20});
     ///     }
     ///
-    ///     let mut my_type = free_list.recycle().unwrap();
-    ///
-    ///     // Needs to be set explicitly
-    ///     my_type.x = 9;
+    ///     let mut my_type = free_list.reuse(MyType {x: 9}).unwrap();
     ///
     ///     assert_eq!(**my_type, MyType {x: 9});
     /// }
     /// ```
-    pub fn recycle<'a>(&'a self) -> Result<Reuse<'a, T>, ()> {
-        let ptr = self.dump.recycle()?;
+    pub fn reuse<'a>(&'a self, contents: <T as Deref>::Target) -> Result<Reuse<'a, T>, <T as Deref>::Target> {
+        if let Ok(ptr) = self.dump.recycle() {
+            let mut reused = unsafe { T::from_raw(ptr) };
+            reused.set_new_val(contents);
 
-        Ok(Reuse::new(
-            unsafe { T::from_raw(ptr) },
-            self,
-        ))
+            Ok(Reuse::new(reused, self))
+        } else {
+            Err(contents)
+        }
+    }
+
+    pub fn reuse_or_alloc<'a>(&'a self, contents: <T as Deref>::Target) -> Reuse<'a, T> {
+        if let Ok(ptr) = self.dump.recycle() {
+            let mut reused = unsafe { T::from_raw(ptr) };
+            reused.set_new_val(contents);
+            Reuse::new(reused, self)
+        } else {
+            self.alloc(contents)
+        }
     }
 
     /// Calls [Reuse::new](crate::Reuse::new) with this free list.
@@ -117,10 +124,11 @@ where
     ///
     /// let free_list = FreeList::<Box<i32>>::new();
     ///
-    /// let x = free_list.alloc(Box::new(5));
+    /// let x = free_list.alloc(5);
     /// ```
-    pub fn alloc<'a>(&'a self, smart_pointer: T) -> Reuse<'a, T> {
-        Reuse::new(smart_pointer, self)
+    pub fn alloc<'a>(&'a self, contents: <T as Deref>::Target) -> Reuse<'a, T> {
+        let allocated = T::new(contents);
+        Reuse::new(allocated, self)
     }
 
     /// Calls drop for all the pointers in free list

@@ -1,4 +1,5 @@
 use std::ops::{Deref, DerefMut};
+use crate::Reusable;
 
 /// Types implementing this trait can be wrapped inside
 /// [FreeList](crate::FreeList).
@@ -13,7 +14,7 @@ use std::ops::{Deref, DerefMut};
 /// For this reason the trait is unsafe.
 pub unsafe trait SmartPointer: Deref + DerefMut
 where
-    <Self as Deref>::Target: Sized,
+    <Self as Deref>::Target: Sized + Reusable,
 {
     /// Constructs an instance of Self by a raw pointer.
     unsafe fn from_raw(raw: *mut <Self as Deref>::Target) -> Self;
@@ -22,4 +23,9 @@ where
     /// This trait assumes if it extracts the raw pointer using `into_raw()`,
     /// it won't be changed from anywhere else.
     fn into_raw(smart_pointer: Self) -> *mut <Self as Deref>::Target;
+
+
+    /// This method should wrap the arg `contents` and
+    /// generate a new instance of `Self`.
+    fn new(contents: <Self as Deref>::Target) -> Self;
 }
