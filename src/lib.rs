@@ -5,10 +5,10 @@
 //! and if `usize` is `4` bytes then `32`.
 
 mod dump;
-mod fbox;
+mod reuse;
 mod free_list;
 mod smart_pointer;
 
-pub use fbox::Reuse;
+pub use reuse::Reuse;
 pub use free_list::FreeList;
 pub use smart_pointer::SmartPointer;

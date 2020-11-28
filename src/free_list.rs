@@ -1,4 +1,4 @@
-use super::{dump::Dump, fbox::Reuse, smart_pointer::SmartPointer};
+use super::{dump::Dump, reuse::Reuse, smart_pointer::SmartPointer};
 use std::ops::Deref;
 
 pub struct FreeList<T: SmartPointer>
