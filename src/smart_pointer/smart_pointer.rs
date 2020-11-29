@@ -6,10 +6,10 @@ use std::ops::{Deref, DerefMut};
 ///
 /// This trait requires the user to guarantee that
 /// the type implementing SmartPointer will _not_ use
-/// the pointer returned from `into_raw()` after being is dropped.
+/// the pointer returned from `into_raw()` after being dropped.
 ///
 /// So, this trait should _not_ be implemented for [Arc](std::sync::Arc), [Rc](std::rc::Rc) etc.
-/// becuase the pointer could still be out there after being dropped.
+/// becuase the pointer could still be out there after the container is dropped.
 ///
 /// For this reason the trait is unsafe.
 pub unsafe trait SmartPointer: Deref + DerefMut

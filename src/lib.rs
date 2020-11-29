@@ -24,7 +24,7 @@
 //!
 //! #[derive(Reusable)]
 //! struct MyType {
-//!     _name: String,
+//!     name: String,
 //!     age: u32,
 //! }
 //!
@@ -39,8 +39,7 @@
 //!     let threads = iter::repeat(0).take(100)
 //!         .map(|_| {
 //!             thread::spawn(|| { for i in 0..1000 {
-//!             eprintln!("hello");
-//!                 let my_type = MyType { name: "Jane Doe".to_string(), age: 30 };
+//!                 let my_type = MyType { name: "Jane".to_string(), age: 30 };
 //!
 //!                 let mut my_type_on_heap = FREE_LIST.reuse_or_alloc(my_type);
 //!
@@ -49,6 +48,7 @@
 //!                 // But when using FREE_LIST.reuse_or_alloc(), the dropped
 //!                 // memory will be reused.
 //!
+//!                 my_type_on_heap.name.push_str(" Doe");
 //!                 my_type_on_heap.age = i;
 //!             }})
 //!         })

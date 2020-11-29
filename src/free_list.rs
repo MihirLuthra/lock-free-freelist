@@ -84,7 +84,7 @@ where
     ///         let _to_drop = free_list.alloc(MyType {x: 20});
     ///     }
     ///
-    ///     let mut my_type = free_list.reuse(MyType {x: 9}).unwrap();
+    ///     let my_type = free_list.reuse(MyType {x: 9}).unwrap();
     ///
     ///     assert_eq!(**my_type, MyType {x: 9});
     /// }
@@ -103,17 +103,40 @@ where
         }
     }
 
+    /// Reuses pointers from free list if it is not empty, otherwise
+    /// allocates new memory.
+    ///
+    /// It basically calls:
+    /// ```
+    /// # macro_rules! ignore { () => {
+    /// self.reuse(contents).unwrap_or_else(|contents| self.alloc(contents))
+    /// # }}
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// use lock_free_freelist::{FreeList, Reusable};
+    ///
+    /// #[derive(Debug, PartialEq, Eq, Reusable)]
+    /// struct MyType {
+    ///     x: i32,
+    /// }
+    ///
+    /// fn main() {
+    ///     let free_list = FreeList::<Box<MyType>>::new();
+    ///
+    ///     let my_type = free_list.reuse_or_alloc(MyType {x: 9});
+    ///
+    ///     assert_eq!(**my_type, MyType {x: 9});
+    /// }
+    /// ```
     pub fn reuse_or_alloc<'a>(&'a self, contents: <T as Deref>::Target) -> Reuse<'a, T> {
-        if let Ok(ptr) = self.dump.recycle() {
-            let mut reused = unsafe { T::from_raw(ptr) };
-            reused.set_new_val(contents);
-            Reuse::new(reused, self)
-        } else {
-            self.alloc(contents)
-        }
+        self.reuse(contents)
+            .unwrap_or_else(|contents| self.alloc(contents))
     }
 
-    /// Calls [Reuse::new](crate::Reuse::new) with this free list.
+    /// Allocates new smart pointer by [SmartPointer::new](crate::SmartPointer::new)
+    /// and wraps it within [Reuse](crate::Reuse).
     ///
     /// # Example
     /// ```
@@ -139,7 +162,7 @@ where
     ///
     /// let free_list = FreeList::<Box<i32>>::new();
     ///
-    /// unsafe{
+    /// unsafe {
     ///     free_list.clear();
     /// }
     /// ```

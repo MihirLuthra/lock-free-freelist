@@ -8,6 +8,8 @@
 /// [`#[derive(Reusable)]`](reusable_derive::Reusable) defines
 /// `set_new_val` to just perform a [std::mem::replace] to set it to new contents
 pub trait Reusable {
+    /// Contents of `other` should be assigned to
+    /// `self` in whatever way the implementer finds efficient.
     fn set_new_val(&mut self, other: Self);
 }
 

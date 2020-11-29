@@ -9,9 +9,9 @@ use std::{
 /// be put to free list and reused.
 ///
 /// This is produced by a [FreeList](crate::FreeList).
-/// It is a smart pointer that contains shared ref to FreeList
-/// and when it's contents drop, the contained pointer of those contents
-/// is dropped into free list for later use.
+/// It is a smart pointer that contains shared ref to a [FreeList](crate::FreeList) instance
+/// and when the [SmartPointer](crate::SmartPointer) within it is about to drop,
+/// it takes the pointer inside of it and stores it in the free list instead.
 ///
 /// It implements Deref and DerefMut to access the wrapped smart pointer.
 ///
@@ -72,7 +72,8 @@ where
 }
 
 /// When the instance of this type is dropped,
-/// an attempt is made to put the pointer to the contenst into free list
+/// an attempt is made to put the pointer of the contained
+/// [SmartPointer](crate::SmartPointer) into free list
 /// and if free list is full, the contents are dropped.
 impl<'a, T: SmartPointer> Drop for Reuse<'a, T>
 where
