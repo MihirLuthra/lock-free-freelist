@@ -13,12 +13,12 @@ use std::ops::Deref;
 /// # Example
 ///
 /// ```
-/// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
+/// use lock_free_freelist::{FreeList, Reusable};
 ///
+/// #[derive(Reusable)]
 /// struct MyType {
 ///     x: i32,
 /// }
-/// impl_reusable!(MyType);
 ///
 /// // A free list to store heap allocated pointers to i32
 /// let free_list = FreeList::<Box<MyType>>::new();
@@ -54,10 +54,10 @@ where
     ///
     /// # Example
     /// ```
-    /// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
+    /// use lock_free_freelist::{FreeList, Reusable};
     ///
+    /// #[derive(Reusable)]
     /// struct MyType;
-    /// impl_reusable!(MyType);
     /// 
     /// let free_list = FreeList::<Box<MyType>>::new();
     /// ```
@@ -71,13 +71,12 @@ where
     ///
     /// # Example
     /// ```
-    /// use lock_free_freelist::{FreeList, Reusable, impl_reusable};
+    /// use lock_free_freelist::{FreeList, Reusable};
     ///
-    /// #[derive(Debug, PartialEq, Eq)]
+    /// #[derive(Debug, PartialEq, Eq, Reusable)]
     /// struct MyType {
     ///     x: i32,
     /// }
-    /// impl_reusable!(MyType);
     ///
     /// fn main() {
     ///     let free_list = FreeList::<Box<MyType>>::new();

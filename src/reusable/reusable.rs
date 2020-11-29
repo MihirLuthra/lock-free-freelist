@@ -1,8 +1,16 @@
+/// This trait is required by [Deref Target](std::ops::Deref::Target)
+/// of a type implementing [SmartPointer](crate::SmartPointer).
+///
+/// When a free list reuses an element, the old contents are still there.
+/// The definition of [set_new_val](crate::Reusable::set_new_val)
+/// should use the new instance of type `Self` to set it to new contents.
+///
+/// [`#[derive(Reusable)]`](reusable_derive::Reusable) defines
+/// `set_new_val` to just perform a [std::mem::replace] to set it to new contents
 pub trait Reusable {
     fn set_new_val(&mut self, other: Self);
 }
 
-#[macro_export]
 macro_rules! impl_reusable {
     ($($ty: ty),*) => {
         $(
@@ -15,7 +23,6 @@ macro_rules! impl_reusable {
     };
 }
 
-#[macro_export]
 macro_rules! impl_generic_reusable {
     ($ty: ty, $( $impl_gen: tt ),*) => {
         impl<$($impl_gen),*> Reusable for $ty {

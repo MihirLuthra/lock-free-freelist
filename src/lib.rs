@@ -16,3 +16,4 @@ pub use reuse::Reuse;
 pub use free_list::FreeList;
 pub use smart_pointer::SmartPointer;
 pub use reusable::Reusable;
+pub use reusable_derive::Reusable;
