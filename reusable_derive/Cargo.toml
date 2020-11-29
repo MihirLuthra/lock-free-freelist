@@ -3,6 +3,8 @@ name = "reusable_derive"
 version = "0.1.0"
 authors = ["Mihir Luthra <luthramihir708@gmail.com>"]
 edition = "2018"
+description = "Derive `Reusable` trait used by lock-free-freelist"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
