@@ -56,3 +56,5 @@ fn main() {
     }
 }
 ```
+
+API docs: https://docs.rs/lock-free-freelist
