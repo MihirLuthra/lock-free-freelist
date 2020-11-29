@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 bit_fiddler = "2.1.1"
-reusable_derive = { path = "reusable_derive" }
+reusable_derive = { version = "0.1.0", path = "reusable_derive" }
 
 [dev-dependencies]
 rand = "0.7.3"
