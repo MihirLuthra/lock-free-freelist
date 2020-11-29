@@ -5,6 +5,7 @@ authors = ["Mihir Luthra <luthramihir708@gmail.com>"]
 edition = "2018"
 description = "A fast lock free limited length free list for multiple producer and consumer."
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/MihirLuthra/lock-free-freelist"
 
 [dependencies]
 bit_fiddler = "2.1.1"
