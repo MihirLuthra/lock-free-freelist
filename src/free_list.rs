@@ -1,13 +1,8 @@
-use super::{
-    dump::Dump,
-    reuse::Reuse,
-    smart_pointer::SmartPointer,
-    reusable::Reusable,
-};
+use super::{dump::Dump, reusable::Reusable, reuse::Reuse, smart_pointer::SmartPointer};
 use std::ops::Deref;
 
 /// A dump for throwing and reusing heap
-/// allocated memory. Maximum entries it 
+/// allocated memory. Maximum entries it
 /// can store is equal to the number of bits in usize.
 ///
 /// # Example
@@ -58,7 +53,7 @@ where
     ///
     /// #[derive(Reusable)]
     /// struct MyType;
-    /// 
+    ///
     /// let free_list = FreeList::<Box<MyType>>::new();
     /// ```
     pub fn new() -> Self {
@@ -94,7 +89,10 @@ where
     ///     assert_eq!(**my_type, MyType {x: 9});
     /// }
     /// ```
-    pub fn reuse<'a>(&'a self, contents: <T as Deref>::Target) -> Result<Reuse<'a, T>, <T as Deref>::Target> {
+    pub fn reuse<'a>(
+        &'a self,
+        contents: <T as Deref>::Target,
+    ) -> Result<Reuse<'a, T>, <T as Deref>::Target> {
         if let Ok(ptr) = self.dump.recycle() {
             let mut reused = unsafe { T::from_raw(ptr) };
             reused.set_new_val(contents);

@@ -1,6 +1,6 @@
 use super::smart_pointer::SmartPointer;
-use std::ops::Deref;
 use crate::Reusable;
+use std::ops::Deref;
 
 unsafe impl<T> SmartPointer for Box<T>
 where

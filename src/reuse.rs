@@ -1,9 +1,8 @@
-use super::{
-    free_list::FreeList,
-    smart_pointer::SmartPointer,
-    reusable::Reusable,
+use super::{free_list::FreeList, reusable::Reusable, smart_pointer::SmartPointer};
+use std::{
+    mem::ManuallyDrop,
+    ops::{Deref, DerefMut},
 };
-use std::{mem::ManuallyDrop, ops::{Deref, DerefMut}};
 
 /// This is a wrapper around smart pointers so that
 /// when they are dropped, raw pointers contained in them can

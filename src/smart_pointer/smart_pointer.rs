@@ -1,5 +1,5 @@
-use std::ops::{Deref, DerefMut};
 use crate::Reusable;
+use std::ops::{Deref, DerefMut};
 
 /// Types implementing this trait can be wrapped inside
 /// [FreeList](crate::FreeList).
@@ -23,7 +23,6 @@ where
     /// This trait assumes if it extracts the raw pointer using `into_raw()`,
     /// it won't be changed from anywhere else.
     fn into_raw(smart_pointer: Self) -> *mut <Self as Deref>::Target;
-
 
     /// This method should wrap the arg `contents` and
     /// generate a new instance of `Self`.
