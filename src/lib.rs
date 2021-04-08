@@ -34,7 +34,7 @@
 //! }
 //!
 //! fn main() {
-//!     // Spawn 4 threads
+//!     // Spawn 100 threads
 //!     // Each thread will allocate elements of type `MyType` using FREE_LIST
 //!     let threads = iter::repeat(0).take(100)
 //!         .map(|_| {
